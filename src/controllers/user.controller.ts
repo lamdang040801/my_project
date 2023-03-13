@@ -1,8 +1,45 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../models/User";
+import { sign } from 'jsonwebtoken';
 import Database from '../services/database';
 
 export default class UserController {
+
+    public static async login(req: Request, res: Response) {
+        const { username, password } = req.body;
+
+        try {
+
+            const existedUser = await User.findUsersByUsername(username);
+            if (existedUser.length != 1 ||
+                existedUser[0].password != password
+            ) {
+                return res.status(401).json({
+                    success: false,
+                    message: "username hoặc password sai"
+                })
+            }
+
+            const token = sign(existedUser[0], process.env.JWT as string, {algorithm: 'HS256'})
+
+            return res.status(200)
+            .setHeader('Authentication', 'Bearer ' + token)
+            .json({
+                success: true,
+                message: "Đăng nhập thành công"
+            })
+
+
+        } catch (error) {
+
+            return res.status(500).json({
+                success: false,
+                message: "Internal Server Error"
+            })
+
+        }
+    }
+
     public static async getAll(req: Request, res: Response) {
 
         try {
