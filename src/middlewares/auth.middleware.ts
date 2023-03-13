@@ -9,7 +9,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
             message: "Chưa đăng nhập"
         })
     }
-    console.log(authString)
+
     const token = (authString as string).split(' ')[1]
     if(!token) {
         return res.status(401).json({
