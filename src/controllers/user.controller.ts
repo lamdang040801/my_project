@@ -13,23 +13,28 @@ export default class UserController {
     }
 
     public static async createUser(req: Request, res: Response) {
-        const { username, password, gender } = req.body;
+        const { username, password, gender, age } = req.body;
 
+        // New User
         const newUser = new User({
             username: username,
             password: password,
-            gender: gender
+            gender: gender,
+            age: age
         });
 
-        const currentUser = await User.findUserByUsername(newUser.username);
-        if(currentUser) {
+        // Check if 'username' exists
+        const existedUser = await User.findUserByUsername(newUser.username);
+        if (existedUser) {
             return res.status(400).json({
                 success: false,
-                message: "User tồn tại"
+                message: "username tồn tại"
             })
         }
 
+        // Create new User
         const result = await User.Create(newUser);
+
         return res.status(200).json({
             success: true,
             data: result
@@ -37,23 +42,30 @@ export default class UserController {
     }
 
     public static async updateUser(req: Request, res: Response) {
-        const { username, password, gender } = req.body;
+        const { id, username } = req.body;
 
-        const updateUser = new User({
-            username: username,
-            password: password,
-            gender: gender
-        });
-
-        const currentUser = await User.findUserByUsername(updateUser.username);
-        if(!currentUser) {
+        // Check if user exists
+        const existedUser = await User.findUserById(id);
+        if (!existedUser) {
             return res.status(400).json({
                 success: false,
                 message: "Không tìm thấy user"
             })
         }
 
-        const result = await User.Update(updateUser);
+        // Check if 'username' exists
+        const nameExistedUser = await User.findUserByUsername(username);
+        if (nameExistedUser) {
+            return res.status(400).json({
+                success: false,
+                message: "username tồn tại"
+            })
+        }
+
+        // Update User
+        existedUser.inputFrom(req.body)
+        const result = await User.Update(existedUser);
+
         return res.status(200).json({
             success: true,
             data: result
@@ -61,21 +73,21 @@ export default class UserController {
     }
 
     public static async deleteUser(req: Request, res: Response) {
-        const { username } = req.body;
+        const { id } = req.body;
 
-        const currentUser = await User.findUserByUsername(username);
-        if(!currentUser) {
+        const currentUser = await User.findUserById(id);
+        if (!currentUser) {
             return res.status(400).json({
                 success: false,
                 message: "Không tìm thấy user"
             })
         }
 
-        if(!await User.delete(username)) {
+        if (!await User.delete(id)) {
             return res.status(400).json({
                 success: false,
                 message: "Xóa thất bại"
-            }) 
+            })
         }
 
         return res.status(200).json({
