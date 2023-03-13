@@ -1,4 +1,3 @@
-import { DateTime } from 'neo4j-driver';
 import { uuid } from 'uuidv4'
 
 export class Base {

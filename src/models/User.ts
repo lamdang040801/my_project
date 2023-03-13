@@ -20,22 +20,36 @@ export default class User extends Base {
         this.age = newUser.age;
     }
 
-    public inputFrom(updateInput: any) {
-        const {username, password, gender, age} = updateInput;
-        username ? this.username = username :  0;
+    getAge() {
+        return this.age
+    }
+
+    inputFrom(updateInput: any) {
+        const { username, password, gender, age } = updateInput;
+        username ? this.username = username : 0;
         password ? this.password = password : 0;
         gender ? this.gender = gender : 0;
         age ? this.age = age : 0;
     }
 
+    public static copy(source: User) {
+        const target = new User({
+            username: "",
+            password: "",
+            gender: 1,
+            age: 0
+        })
+        return Object.assign(target, source);
+    }
+
     public static async getAll() {
         const session = await Database.getSession();
         const result = await session.run(
-            'MATCH (n:User) RETURN DISTINCT collect(properties(n)) as p',
+            'OPTIONAL MATCH (n:User) RETURN DISTINCT collect(properties(n)) as p',
             {}
         );
         await session.close();
-        return result.records[0].get('p') as User[]
+        return result.records[0]?.get('p') as User[]
     }
 
     public static async Create(user: User) {
@@ -60,7 +74,7 @@ export default class User extends Base {
         return result.records[0].get('user') as User
     }
 
-    public static async findUserById(id: string) {
+    public static async findUserById(id: string): Promise<User | null> {
         const session = await Database.getSession();
         const result = await session.run(
             'MATCH (n:User) WHERE n.id = $id RETURN properties(n) as user',
@@ -72,16 +86,16 @@ export default class User extends Base {
             : null
     }
 
-    public static async findUserByUsername(username: string) {
+    public static async findUsersByUsername(username: string) {
         const session = await Database.getSession();
         const result = await session.run(
-            'MATCH (n:User) WHERE n.username = $username RETURN properties(n) as user',
+            'MATCH (n:User) WHERE n.username = $username RETURN collect(properties(n)) as user',
             { username: username }
         );
         await session.close();
         return result.records.length > 0
-            ? result.records[0].get('user') as User
-            : null
+            ? result.records[0].get('user') as User[]
+            : []
     }
 
     public static async delete(id: string) {
