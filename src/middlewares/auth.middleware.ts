@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
     const authString = req.headers['authentication'];
+    console.log(authString)
     if(!authString) {
         return res.status(401).json({
             success: false,
